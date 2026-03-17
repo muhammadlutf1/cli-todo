@@ -18,10 +18,10 @@ import Duration from "duration-relativetimeformat";
 const d = new Duration("en");
 
 const addNewTaskLabel = chalk.green("➕ Add a new task");
-export async function mainMenu(i: number) {
+export async function mainMenu(firstAccess: boolean) {
   const result = await select({
     message: chalk.magenta(
-      i === 0
+      firstAccess
         ? ">> Ready to check some boxes?"
         : ">> What's next on the agenda?",
     ),
@@ -43,24 +43,22 @@ export async function mainMenu(i: number) {
   return result;
 }
 
-export async function listMenu() {
+export async function listMenu(prompt = true, filters?: TaskFilters) {
   while (true) {
-    const filterType = await select({
+    const filterType = prompt ? await select({
       message: "How do you want to see your tasks?",
       options: [
         { value: "all", label: "📄 View All" },
         { value: "filters", label: "🛠  Filters" },
         { value: "backToMainMenu", label: chalk.gray("<- Main Menu") },
       ],
-    });
+    }) : (filters ? "filters" : "all");
 
     if (isCancel(filterType)) {
       return true;
     }
 
     if (filterType === "backToMainMenu") return true; // exit
-
-    let selectedTask: string | null = null;
 
     if (filterType === "all") {
       const tasks = getAllTasks();
@@ -75,14 +73,17 @@ export async function listMenu() {
         continue;
       }
 
-      if (selectedTaskOpt === "__back") continue;
+      if (selectedTaskOpt === "__back") {
+        prompt = true;
+        continue;
+      };
       if (selectedTaskOpt === "backToMainMenu") return true;
 
-      selectedTask = selectedTaskOpt;
+      return ({ selected: selectedTaskOpt })
     }
 
     if (filterType === "filters") {
-      const filter = await group({
+      const taskFilters = filters || await group({
         status: async () => {
           const result = await select({
             message: "Status? " + chalk.gray("(Optional)"),
@@ -161,21 +162,21 @@ export async function listMenu() {
           if (typeof type !== "symbol") return dateFilterHandler(type);
           return null;
         },
-      });
+      }); 
 
-      const tasks = filterTasks(getAllTasks(), filter as TaskFilters);
+      const tasks = filterTasks(getAllTasks(), taskFilters as TaskFilters);
 
       const filteredDateString =
-        typeof filter.date === "number"
-          ? `day: (${new Date(filter.date).toDateString()})`
-          : Array.isArray(filter.date)
-            ? `Range: (${filter.date[0] !== null ? new Date(filter.date[0]).toDateString() : ""} - ${filter.date[1] !== null ? new Date(filter.date[1]).toDateString() : ""})`
+        typeof taskFilters.date === "number"
+          ? `day: (${new Date(taskFilters.date).toDateString()})`
+          : Array.isArray(taskFilters.date)
+            ? `Range: (${taskFilters.date[0] !== null ? new Date(taskFilters.date[0]).toDateString() : ""} - ${taskFilters.date[1] !== null ? new Date(taskFilters.date[1]).toDateString() : ""})`
             : "";
 
       const message =
         chalk.magenta.underline("Filtered tasks: ") +
         chalk.gray(
-          `${filter.status !== "_" ? `status: (${filter.status})` : ""}${filter.category !== "_" ? `category: (${filter.category})` : ""} ${filteredDateString}`,
+          `${taskFilters.status !== "_" ? `status: (${taskFilters.status})` : ""}${taskFilters.category !== "_" ? `category: (${taskFilters.category})` : ""} ${filteredDateString}`,
         );
 
       if (tasks.length === 0) log.info(chalk.red("No tasks found!"));
@@ -185,11 +186,14 @@ export async function listMenu() {
           break;
         }
         if (selected === "backToMainMenu") break;
-        selectedTask = selected;
+
+        return ({
+          selected,
+          filters: taskFilters
+        });
+
       }
     }
-
-    return selectedTask;
   }
 }
 
@@ -446,4 +450,116 @@ export async function newTaskView() {
 
 export function logSuccess(message: string) {
   log.success(chalk.green(message));
+}
+
+export function logError(message: string) {
+  log.success(chalk.red(message));
+}
+
+export async function taskView(
+  task: Task,
+): Promise<
+  | { type: "title" | "description" | "category" | "status"; value: string }
+  | { type: "delete" }
+  | undefined
+> {
+  const action = await select({
+    message:
+      `"${chalk.bold.magenta(`${task.title}`)}"` +
+      `${task.category ? chalk.gray(` [@${task.category}]`) : ""}\n` +
+      `Status: [ ${
+        task.status === "in-progress"
+          ? chalk.yellow("In Progress")
+          : task.status === "todo"
+            ? chalk.magenta("Todo")
+            : chalk.green("Done")
+      } ]\n` +
+      `${task.description ? `${chalk.dim(task.description)}\n` : ""}` +
+      `${chalk.gray(
+        `${d.format(task.createdAtTimestamp)} (${new Date(
+          task.createdAtTimestamp,
+        ).toDateString()})`,
+      )}\n\n───────────────\n`,
+    options: [
+      { value: "edit_status", label: chalk.green("⌛ Edit Status") },
+      { value: "edit_task", label: chalk.green("✏️ Edit Task") },
+      { value: "delete", label: chalk.red("🗑️ Delete") },
+      { value: "back", label: chalk.gray("<- Back") },
+    ],
+  });
+
+  if (isCancel(action)) return;
+
+  if (action === "back") return;
+
+  if (action === "edit_status") {
+    const options = [];
+    if (task.status !== "todo")
+      options.push({ value: "todo", label: "🔳 Todo" });
+    if (task.status !== "in-progress")
+      options.push({ value: "in-progress", label: "⌛ In Progress" });
+    if (task.status !== "done")
+      options.push({ value: "done", label: "✅ Done" });
+
+    const result = await select({
+      message: "Change status to? ",
+      options,
+    });
+
+    if (isCancel(result)) return;
+
+    return { type: "status", value: result.toString() };
+  }
+
+  if (action === "edit_task") {
+    const selected = await select({
+      message: "What do you want to change? ",
+      options: [
+        { value: "title", label: "Title" },
+        { value: "description", label: "Description" },
+        { value: "category", label: "Category" },
+      ],
+    });
+
+    if (isCancel(selected)) return;
+
+    if (selected === "title" || selected === "description") {
+      const result = await text({
+        message: "New " + selected + "? ",
+      });
+
+      if (isCancel(result)) return;
+
+      return { type: selected, value: result.toString() };
+    }
+
+    if (selected === "category") {
+      const categoryChoice = await categoryMenu("New category?", [
+        { value: "__new-category", label: chalk.green("➕ Add new") },
+      ]);
+
+      if (isCancel(categoryChoice)) return undefined;
+
+      if (categoryChoice === "__new-category") {
+        const result = await text({
+          message: chalk.magenta("Where should we file this?"),
+        });
+
+        if (isCancel(result)) return { type: "category", value: "" };
+        else return { type: "category", value: result };
+      }
+
+      return { type: "category", value: categoryChoice };
+    }
+  }
+
+  if (action === "delete") {
+    const result = await confirm({
+      message: "Are you sure? You won't be able to undo this.",
+    });
+
+    if (!result || isCancel(result)) return;
+
+    return { type: "delete" }
+  };
 }

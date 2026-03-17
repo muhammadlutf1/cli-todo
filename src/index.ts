@@ -17,12 +17,12 @@ console.log(
 console.log(chalk.greenBright("  [✓]") + " Get things done.");
 console.log(chalk.greenBright("  [✓]") + " Stop procrastinating.");
 
-// TODO: task list functionalities
 
-let i = 0;
+
+let firstAccess = true;
 async function main() {
   while (true) {
-    const menu = await mainMenu(i);
+    const menu = await mainMenu(firstAccess);
 
     if (menu === "exit") process.exit(0);
 
@@ -30,7 +30,7 @@ async function main() {
 
     if (menu === "list") await listTasksHandler();
 
-    i++;
+    firstAccess = false;
   }
 }
 

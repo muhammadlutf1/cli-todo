@@ -4,10 +4,12 @@ import {
   dateRangeInput,
   dayInput,
   listMenu,
+  logError,
   logSuccess,
   newTaskView,
+  taskView,
 } from "../cli/views.ts";
-import { createTask } from "../store.ts";
+import { createTask, deleteTask, getTask, updateTask } from "../store.ts";
 
 export async function addTaskHandler() {
   const task = await newTaskView();
@@ -81,13 +83,37 @@ export async function dateFilterHandler(dateInput: string) {
 }
 
 export async function listTasksHandler() {
-  const selectedTaskId = await listMenu();
+  let firstAccess = true;
+  let filters: TaskFilters | undefined;
+  while (true) {
+    const listSelection = firstAccess ? await listMenu() : await listMenu(false, filters);
+    firstAccess = false;
 
-  if (selectedTaskId === "add") return await addTaskHandler();
+    if (typeof listSelection !== "object") return;
 
-  if (typeof selectedTaskId !== "string") return;
+    const { selected, filters: f } = listSelection;
+    filters = f
 
-  const id = parseInt(selectedTaskId);
+    if (selected === "add") {
+      await addTaskHandler();
+      continue;
+    };
 
-  console.log(`Selected ${id}`);
+    const taskId = parseInt(selected);
+    const task = getTask(taskId);
+    if (!task) return logError("Task not found");
+
+    const taskAction = await taskView(task);
+    console.log(taskAction)
+    if (!taskAction) continue; // TaskView '<- Back' or Canaled
+
+    if (taskAction.type === "delete") {
+      deleteTask(task.id);
+      logSuccess("Deleted Task");
+      continue;
+    };
+
+    updateTask(task.id, { ...task, [taskAction.type]: taskAction.value });
+    logSuccess(`Updated ${taskAction.type} to '${taskAction.value}'`);
+  }
 }
