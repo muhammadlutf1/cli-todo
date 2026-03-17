@@ -1,9 +1,13 @@
+import { Dates } from "./utils.ts";
+
+export type TaskStatus = "done" | "in-progress" | "todo";
+
 export type Task = {
   readonly id: number;
   title: string;
   description?: string;
   category?: string;
-  status: "done" | "in-progress" | "todo";
+  status: TaskStatus;
   readonly createdAtTimestamp: number;
   readonly updatedAtTimestamp?: number;
 };
@@ -11,3 +15,5 @@ export type Task = {
 export type TaskUpdate = Partial<
   Omit<Task, "id" | "createdAtTimestamp" | "updatedAtTimestamp">
 >;
+
+export type DateKey = keyof typeof Dates;

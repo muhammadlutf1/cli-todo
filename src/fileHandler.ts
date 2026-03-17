@@ -1,11 +1,22 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import type { Task, TaskUpdate } from "./types.ts";
+import type { Task, TaskStatus, TaskUpdate } from "./types.ts";
 
 const storageFileName = "tasks.json" as const;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const storagePath = path.join(__dirname, "..", storageFileName);
+
+// TODO: unique id
+
+function writeToStorage(data: Task[]) {
+  try {
+    fs.writeFileSync(storagePath, JSON.stringify(data));
+    return data.length;
+  } catch (e) {
+    throw new Error(String(e));
+  }
+}
 
 export function getAllTasks(): Task[] {
   const filesList = fs.readdirSync(path.join(__dirname, ".."));
@@ -19,19 +30,24 @@ export function getAllTasks(): Task[] {
   return JSON.parse(fileContent);
 }
 
-function writeToStorage(data: Task[]) {
-  try {
-    fs.writeFileSync(storagePath, JSON.stringify(data));
-    return data.length;
-  } catch (e) {
-    throw new Error(String(e));
-  }
-}
+// ---  Utils ---
 
 export function getTask(id: number) {
   const tasks = getAllTasks();
 
   return tasks.find((task) => task.id === id) ?? null;
+}
+
+export function getTasksByCategory(category: string) {
+  const tasks = getAllTasks();
+
+  return tasks.filter((task) => task.category === category);
+}
+
+export function getTasksByStatus(status: TaskStatus) {
+  const tasks = getAllTasks();
+
+  return tasks.filter((task) => task.status === status);
 }
 
 export function addTask(
@@ -73,7 +89,7 @@ export function updateTask(id: number, data: TaskUpdate) {
 export function deleteTask(id: number) {
   const tasks = getAllTasks();
 
-  return tasks.filter((task) => task.id != id);
+  return writeToStorage(tasks.filter((task) => task.id != id)); // new data length
 }
 
 export function listCategories() {
