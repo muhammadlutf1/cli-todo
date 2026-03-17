@@ -19,20 +19,24 @@ function writeToStorage(data: Storage) {
 function readStorage(): Storage {
   const filesList = fs.readdirSync(path.join(__dirname, ".."));
 
-  if (!filesList.includes(storageFileName)) {
+  try {
+    if (!filesList.includes(storageFileName)) throw new Error();
+    const fileContent = fs.readFileSync(storagePath, { encoding: "utf-8" });
+    const content = JSON.parse(fileContent);
+    if (!content.tasks) throw new Error();
+
+    return content; 
+  } catch (error) {
     const init = { next: 1, tasks: [] };
     fs.writeFileSync(storagePath, JSON.stringify(init));
     return init;
   }
-
-  const fileContent = fs.readFileSync(storagePath, { encoding: "utf-8" });
-  return JSON.parse(fileContent);
 }
 
 // ---  Utils ---
 
 export function getAllTasks(): Task[] {
-  return readStorage().tasks || [];
+  return readStorage().tasks;
 }
 
 export function getTask(id: number) {
