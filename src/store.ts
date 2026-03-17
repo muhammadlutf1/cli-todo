@@ -32,7 +32,7 @@ function readStorage(): Storage {
 // ---  Utils ---
 
 export function getAllTasks(): Task[] {
-  return readStorage().tasks;
+  return readStorage().tasks || [];
 }
 
 export function getTask(id: number) {
