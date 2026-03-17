@@ -70,8 +70,8 @@ async function main() {
 
       console.log(chalk.green(`✅ Added '${title}' (ID: ${id})`));
     }
+    i++;
   }
-  i++;
 }
 
 main();
