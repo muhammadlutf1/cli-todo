@@ -9,6 +9,7 @@ import { filterTasks, dateFilterHandler } from "../services/tasks.ts";
 import Duration from "duration-relativetimeformat";
 const d = new Duration("en");
 
+const addNewTaskLabel = chalk.green("➕ Add a new task");
 export async function mainMenu(i: number) {
   const result = await select({
     message: chalk.magenta(
@@ -22,7 +23,7 @@ export async function mainMenu(i: number) {
         label: chalk.green("📂 View Tasks"),
         hint: getAllTasks().length.toString(),
       },
-      { value: "add", label: chalk.green("➕ Add a new task") },
+      { value: "add", label: addNewTaskLabel },
       { value: "exit", label: chalk.redBright("Exit") },
     ],
   });
@@ -51,7 +52,7 @@ export async function listMenu() {
 
     if (filterType === "backToMainMenu") return true; // exit
 
-    let selectedTaskId: number | null = null;
+    let selectedTask: string | null = null;
 
     if (filterType === "all") {
       const tasks = getAllTasks();
@@ -69,7 +70,7 @@ export async function listMenu() {
       if (selectedTaskOpt === "__back") continue;
       if (selectedTaskOpt === "backToMainMenu") return true;
 
-      selectedTaskId = parseInt(selectedTaskOpt as string);
+      selectedTask = selectedTaskOpt;
     }
 
     if (filterType === "filters") {
@@ -171,16 +172,16 @@ export async function listMenu() {
 
       if (tasks.length === 0) log.info(chalk.red("No tasks found!"));
       else {
-        const selectedTask = await listTasks(message, tasks, true);
-        if (isCancel(selectedTask)) {
+        const selected = await listTasks(message, tasks, true);
+        if (isCancel(selected)) {
           break;
         }
-        if (selectedTask === "backToMainMenu") break;
-        selectedTaskId = parseInt(selectedTask as string);
+        if (selected === "backToMainMenu") break;
+        selectedTask = selected;
       }
     }
 
-    return selectedTaskId;
+    return selectedTask;
   }
 }
 
@@ -290,6 +291,11 @@ export async function listTasks(
       value: "_",
       disabled: true,
       label: "",
+    },
+    {
+      disabled: false,
+      value: "add",
+      label: addNewTaskLabel,
     },
     {
       value: "__back",

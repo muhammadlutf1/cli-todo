@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import terminalLink from "terminal-link";
-import { listMenu, mainMenu } from "./cli/views.ts";
-import { addTask } from "./services/tasks.ts";
+import { mainMenu } from "./cli/views.ts";
+import { addTaskHandler, listTasksHandler } from "./services/tasks.ts";
 
 const logo = ` ____  _     _    _____ ____  ____  ____ 
 /   _\\/ \\   / \\  /__ __Y  _ \\/  _ \\/  _ \\
@@ -18,7 +18,6 @@ console.log(chalk.greenBright("  [✓]") + " Get things done.");
 console.log(chalk.greenBright("  [✓]") + " Stop procrastinating.");
 
 // TODO: task list functionalities
-// TODO: make task creation possible inside list view
 
 let i = 0;
 async function main() {
@@ -27,9 +26,9 @@ async function main() {
 
     if (menu === "exit") process.exit(0);
 
-    if (menu === "add") await addTask();
+    if (menu === "add") await addTaskHandler();
 
-    if (menu === "list") await listMenu();
+    if (menu === "list") await listTasksHandler();
 
     i++;
   }

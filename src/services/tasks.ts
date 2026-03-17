@@ -3,12 +3,13 @@ import { checkDateRange, Dates } from "../utils.ts";
 import {
   dateRangeInput,
   dayInput,
+  listMenu,
   logSuccess,
   newTaskView,
 } from "../cli/views.ts";
 import { createTask } from "../store.ts";
 
-export async function addTask() {
+export async function addTaskHandler() {
   const task = await newTaskView();
 
   if (!task.title) return;
@@ -77,4 +78,16 @@ export async function dateFilterHandler(dateInput: string) {
 
     return dateArr;
   }
+}
+
+export async function listTasksHandler() {
+  const selectedTaskId = await listMenu();
+
+  if (selectedTaskId === "add") return await addTaskHandler();
+
+  if (typeof selectedTaskId !== "string") return;
+
+  const id = parseInt(selectedTaskId);
+
+  console.log(`Selected ${id}`);
 }
