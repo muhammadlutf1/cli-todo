@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import chalk from "chalk";
 import terminalLink from "terminal-link";
 import { mainMenu } from "./cli/views.ts";

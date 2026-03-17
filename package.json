@@ -19,5 +19,8 @@
     "duration-relativetimeformat": "^2.0.4",
     "string-width": "^8.1.1",
     "terminal-link": "^5.0.0"
+  },
+  "bin": {
+    "cli-todo": "./src/index.ts"
   }
 }
