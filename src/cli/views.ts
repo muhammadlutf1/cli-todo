@@ -1,5 +1,13 @@
 import chalk from "chalk";
-import { group, select, log, text, isCancel } from "@clack/prompts";
+import {
+  group,
+  select,
+  log,
+  text,
+  isCancel,
+  cancel,
+  confirm,
+} from "@clack/prompts";
 import type { Option } from "@clack/prompts";
 type SelectOption = Option<string> & { label: string };
 import type { Task, TaskFilters } from "../types.ts";
@@ -365,63 +373,75 @@ export async function dateRangeInput() {
 }
 
 export async function newTaskView() {
-  const task = await group({
-    title: async () => {
-      const result = await text({
-        message: chalk.magenta("What's the new task?"),
-        validate(value) {
-          if (!value?.length) return "It can't be empty!";
-        },
-      });
+  try {
+    const task = await group({
+      title: async () => {
+        while (true) {
+          const result = await text({
+            message: chalk.magenta("What's the new task?"),
+            validate(value) {
+              if (!value?.length) return "It can't be empty!";
+            },
+          });
 
-      if (isCancel(result)) {
-        log.warn("Task creation will be cancelled");
-        return "";
-      }
+          if (isCancel(result)) {
+            const isCanceled = await confirm({
+              message: "Do you want to cancel?",
+              initialValue: true,
+            });
 
-      return result;
-    },
+            if (isCancel(isCanceled) || isCanceled)
+              throw new Error(); // cancel
+            else continue;
+          }
 
-    description: async () => {
-      const result = await text({
-        message: chalk.magenta("More details? ") + chalk.gray("(Optional)"),
-      });
+          return result;
+        }
+      },
 
-      if (isCancel(result)) {
-        return "";
-      }
+      description: async () => {
+        const result = await text({
+          message: chalk.magenta("More details? ") + chalk.gray("(Optional)"),
+        });
 
-      return result;
-    },
+        if (isCancel(result)) throw new Error(); // cancel
 
-    selectedCategory: async () =>
-      categoryMenu(
-        chalk.magenta("Tag it! Which category? ") + chalk.gray("(Optional)"),
-        [
-          { value: "__new-category", label: chalk.green("➕ Add new") },
-          { value: "__skip-category", label: chalk.gray("(No category)") },
-        ],
-      ),
-  });
+        return result;
+      },
 
-  let category = task.selectedCategory;
-  if (task.selectedCategory === "__new-category") {
-    const result = await text({
-      message: chalk.magenta("Where should we file this?"),
+      selectedCategory: async () =>
+        categoryMenu(
+          chalk.magenta("Tag it! Which category? ") + chalk.gray("(Optional)"),
+          [
+            { value: "__new-category", label: chalk.green("➕ Add new") },
+            { value: "__skip-category", label: chalk.gray("(No category)") },
+          ],
+        ),
     });
 
-    if (isCancel(result)) {
-      category = "";
-    } else {
-      category = result as string;
-    }
-  }
+    let category = task.selectedCategory;
+    if (task.selectedCategory === "__new-category") {
+      const result = await text({
+        message: chalk.magenta("Where should we file this?"),
+      });
 
-  return {
-    title: task.title,
-    description: task.description,
-    category: task.selectedCategory === "__skip-category" ? "" : category,
-  };
+      if (isCancel(result)) {
+        category = "";
+      } else {
+        category = result as string;
+      }
+    }
+
+    return {
+      title: task.title,
+      description: task.description,
+      category: task.selectedCategory === "__skip-category" ? "" : category,
+    };
+  } catch (error) {
+    cancel("Canceled new task");
+
+    return {};
+  }
 }
 
 export function logSuccess(message: string) {
