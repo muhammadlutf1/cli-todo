@@ -22,7 +22,7 @@ export type DateKey = keyof typeof Dates;
 
 export type TaskFilters = {
   status: TaskStatus | "_";
-  category: string;
+  category: "_" | string;
   date: null | (null | number)[] | number | "_";
   //    ^^^^      ^^^^^^^^^         ^^^
   // type: none       range         day

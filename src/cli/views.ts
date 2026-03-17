@@ -45,23 +45,29 @@ export async function mainMenu(firstAccess: boolean) {
 
 export async function listMenu(prompt = true, filters?: TaskFilters) {
   while (true) {
-    const filterType = prompt ? await select({
-      message: "How do you want to see your tasks?",
-      options: [
-        { value: "all", label: "📄 View All" },
-        { value: "filters", label: "🛠  Filters" },
-        { value: "backToMainMenu", label: chalk.gray("<- Main Menu") },
-      ],
-    }) : (filters ? "filters" : "all");
+    const filterType = prompt
+      ? await select({
+          message: "How do you want to see your tasks?",
+          options: [
+            { value: "today", label: "📅 View Today" },
+            { value: "all", label: "📄 View All" }, // TODO: Add Today View without filter
+            { value: "filters", label: "🛠  Filters" },
+            { value: "backToMainMenu", label: chalk.gray("<- Main Menu") },
+          ],
+        })
+      : filters
+        ? "filters"
+        : "all";
 
-    if (isCancel(filterType)) {
-      return true;
-    }
+    if (isCancel(filterType)) return true;
 
     if (filterType === "backToMainMenu") return true; // exit
 
     if (filterType === "all") {
       const tasks = getAllTasks();
+
+      if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
+
       const selectedTaskOpt = await listTasks(
         chalk.magenta.underline("All tasks:") +
           chalk.gray(` (${tasks.length})`),
@@ -76,93 +82,95 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
       if (selectedTaskOpt === "__back") {
         prompt = true;
         continue;
-      };
+      }
       if (selectedTaskOpt === "backToMainMenu") return true;
 
-      return ({ selected: selectedTaskOpt })
+      return { selected: selectedTaskOpt };
     }
 
     if (filterType === "filters") {
-      const taskFilters = filters || await group({
-        status: async () => {
-          const result = await select({
-            message: "Status? " + chalk.gray("(Optional)"),
-            options: [
-              {
-                value: "todo",
-                label: "🔳 Todo",
-              },
-              {
-                value: "in-progress",
-                label: "⌛ In Progress",
-              },
-              {
-                value: "done",
-                label: "✅ Done",
-              },
-              {
-                value: "_",
-                label: chalk.gray("Skip"),
-              },
-            ],
-          });
+      const taskFilters =
+        filters ||
+        (await group({
+          status: async () => {
+            const result = await select({
+              message: "Status? " + chalk.gray("(Optional)"),
+              options: [
+                {
+                  value: "todo",
+                  label: "🔳 Todo",
+                },
+                {
+                  value: "in-progress",
+                  label: "⌛ In Progress",
+                },
+                {
+                  value: "done",
+                  label: "✅ Done",
+                },
+                {
+                  value: "_",
+                  label: chalk.gray("Skip"),
+                },
+              ],
+            });
 
-          if (isCancel(result)) {
-            return "_";
-          }
+            if (isCancel(result)) {
+              return "_";
+            }
 
-          return result;
-        },
+            return result;
+          },
 
-        category: async () => {
-          const result = await categoryMenu(
-            "Which category? " + chalk.gray("(Optional)"),
-            [
-              {
-                value: "_",
-                label: chalk.gray("Skip"),
-              },
-            ],
-          );
+          category: async () => {
+            const result = await categoryMenu(
+              "Which category? " + chalk.gray("(Optional)"),
+              [
+                {
+                  value: "_",
+                  label: chalk.gray("Skip"),
+                },
+              ],
+            );
 
-          if (isCancel(result)) {
-            return "_";
-          }
+            if (isCancel(result)) {
+              return "_";
+            }
 
-          return result;
-        },
+            return result;
+          },
 
-        date: async () => {
-          const type = await select({
-            message: "Date? " + chalk.gray("(Optional)"),
-            options: [
-              {
-                value: "today",
-                label: "⚡ Today",
-              },
-              {
-                value: "day",
-                label: "📅 Specific date",
-              },
-              {
-                value: "range",
-                label: "🔀 Between two dates",
-              },
-              {
-                value: "_",
-                label: chalk.gray("Skip"),
-              },
-            ],
-          });
+          date: async () => {
+            const type = await select({
+              message: "Date? " + chalk.gray("(Optional)"),
+              options: [
+                {
+                  value: "today",
+                  label: "⚡ Today",
+                },
+                {
+                  value: "day",
+                  label: "📅 Specific date",
+                },
+                {
+                  value: "range",
+                  label: "🔀 Between two dates",
+                },
+                {
+                  value: "_",
+                  label: chalk.gray("Skip"),
+                },
+              ],
+            });
 
-          if (isCancel(type)) {
-            return "_";
-          }
+            if (isCancel(type)) {
+              return "_";
+            }
 
-          if (typeof type !== "symbol") return dateFilterHandler(type);
-          return null;
-        },
-      }); 
+            if (typeof type !== "symbol") return dateFilterHandler(type);
+            return null;
+          },
+        }));
 
       const tasks = filterTasks(getAllTasks(), taskFilters as TaskFilters);
 
@@ -179,20 +187,41 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
           `${taskFilters.status !== "_" ? `status: (${taskFilters.status})` : ""}${taskFilters.category !== "_" ? `category: (${taskFilters.category})` : ""} ${filteredDateString}`,
         );
 
-      if (tasks.length === 0) log.info(chalk.red("No tasks found!"));
-      else {
-        const selected = await listTasks(message, tasks, true);
-        if (isCancel(selected)) {
-          break;
-        }
-        if (selected === "backToMainMenu") break;
+      if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
 
-        return ({
-          selected,
-          filters: taskFilters
-        });
-
+      const selected = await listTasks(message, tasks, true);
+      if (isCancel(selected)) {
+        break;
       }
+      if (selected === "backToMainMenu") break;
+
+      return {
+        selected,
+        filters: taskFilters,
+      };
+    }
+
+    if (filterType === "today") {
+      const tasks = filterTasks(getAllTasks(), {
+        category: "_",
+        status: "_",
+        date: 0,
+      });
+
+      if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
+
+      const selected = await listTasks(
+        chalk.magenta.underline("Today Tasks:"),
+        tasks,
+        true,
+      );
+      if (isCancel(selected)) break;
+
+      if (selected === "backToMainMenu") break;
+
+      return {
+        selected,
+      };
     }
   }
 }
@@ -560,6 +589,6 @@ export async function taskView(
 
     if (!result || isCancel(result)) return;
 
-    return { type: "delete" }
-  };
+    return { type: "delete" };
+  }
 }
