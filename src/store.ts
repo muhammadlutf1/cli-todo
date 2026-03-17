@@ -1,29 +1,28 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import type { Task, TaskStatus, TaskUpdate } from "./types.ts";
+import type { Storage, Task, TaskStatus, TaskUpdate } from "./types.ts";
 
 const storageFileName = "tasks.json" as const;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const storagePath = path.join(__dirname, "..", storageFileName);
 
-// TODO: unique id
-
-function writeToStorage(data: Task[]) {
+function writeToStorage(data: Storage) {
   try {
     fs.writeFileSync(storagePath, JSON.stringify(data));
-    return data.length;
+    return data.tasks.length;
   } catch (e) {
     throw new Error(String(e));
   }
 }
 
-export function getAllTasks(): Task[] {
+function readStorage(): Storage {
   const filesList = fs.readdirSync(path.join(__dirname, ".."));
 
   if (!filesList.includes(storageFileName)) {
-    fs.writeFileSync(storagePath, "[]");
-    return [];
+    const init = { next: 1, tasks: [] };
+    fs.writeFileSync(storagePath, JSON.stringify(init));
+    return init;
   }
 
   const fileContent = fs.readFileSync(storagePath, { encoding: "utf-8" });
@@ -31,6 +30,10 @@ export function getAllTasks(): Task[] {
 }
 
 // ---  Utils ---
+
+export function getAllTasks(): Task[] {
+  return readStorage().tasks;
+}
 
 export function getTask(id: number) {
   const tasks = getAllTasks();
@@ -55,10 +58,10 @@ export function createTask(
   description?: string,
   category?: string,
 ) {
-  const tasks = getAllTasks();
+  const { next: id, tasks } = readStorage();
 
   tasks.push({
-    id: tasks.length + 1,
+    id,
     title,
     description,
     category,
@@ -66,30 +69,35 @@ export function createTask(
     createdAtTimestamp: Date.now(),
   });
 
-  return writeToStorage(tasks);
+  writeToStorage({ next: id + 1, tasks });
+  return id;
 }
 
 export function updateTask(id: number, data: TaskUpdate) {
   if (!Object.keys(data).length)
     throw new Error("Expected 1 Update Field At Least");
 
-  const tasks = getAllTasks();
+  const { next, tasks } = readStorage();
 
-  writeToStorage(
-    tasks.map((task) =>
+  writeToStorage({
+    next,
+    tasks: tasks.map((task) =>
       task.id === id
         ? { ...task, ...data, updatedAtTimestamp: Date.now() }
         : task,
     ),
-  );
+  });
 
   return id;
 }
 
 export function deleteTask(id: number) {
-  const tasks = getAllTasks();
+  const { next, tasks } = readStorage();
 
-  return writeToStorage(tasks.filter((task) => task.id != id)); // new data length
+  return writeToStorage({
+    next,
+    tasks: tasks.filter((task) => task.id !== id),
+  });
 }
 
 export function getCategories() {

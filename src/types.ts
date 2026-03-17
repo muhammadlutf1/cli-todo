@@ -2,6 +2,8 @@ import { Dates } from "./utils.ts";
 
 export type TaskStatus = "done" | "in-progress" | "todo";
 
+export type Storage = { next: number; tasks: Task[] };
+
 export type Task = {
   readonly id: number;
   title: string;
