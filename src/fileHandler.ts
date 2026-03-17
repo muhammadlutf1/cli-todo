@@ -75,3 +75,16 @@ export function deleteTask(id: number) {
 
   return tasks.filter((task) => task.id != id);
 }
+
+export function listCategories() {
+  const tasks = getAllTasks();
+  const list: Record<string, number> = {};
+
+  tasks.forEach((task) =>
+    task.category
+      ? (list[task.category] = (list[task.category] || 0) + 1)
+      : null,
+  );
+
+  return list;
+}
