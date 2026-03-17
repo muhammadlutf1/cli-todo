@@ -50,7 +50,7 @@ export function getTasksByStatus(status: TaskStatus) {
   return tasks.filter((task) => task.status === status);
 }
 
-export function addTask(
+export function createTask(
   title: string,
   description?: string,
   category?: string,
@@ -92,7 +92,7 @@ export function deleteTask(id: number) {
   return writeToStorage(tasks.filter((task) => task.id != id)); // new data length
 }
 
-export function listCategories() {
+export function getCategories() {
   const tasks = getAllTasks();
   const list: Record<string, number> = {};
 

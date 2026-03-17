@@ -17,3 +17,11 @@ export type TaskUpdate = Partial<
 >;
 
 export type DateKey = keyof typeof Dates;
+
+export type TaskFilters = {
+  status: TaskStatus | "_";
+  category: string;
+  date: null | (null | number)[] | number | "_";
+  //    ^^^^      ^^^^^^^^^         ^^^
+  // type: none       range         day
+};
