@@ -11,6 +11,8 @@ import { createTask } from "../store.ts";
 export async function addTask() {
   const task = await newTaskView();
 
+  if (!task.title) return;
+
   const id = createTask(task.title, task.description, task.category);
 
   logSuccess(`✅ Added '${task.title}' (ID: ${id})`);

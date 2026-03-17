@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { group, select, log, text } from "@clack/prompts";
+import { group, select, log, text, isCancel } from "@clack/prompts";
 import type { Option } from "@clack/prompts";
 type SelectOption = Option<string> & { label: string };
 import type { Task, TaskFilters } from "../types.ts";
@@ -10,7 +10,7 @@ import Duration from "duration-relativetimeformat";
 const d = new Duration("en");
 
 export async function mainMenu(i: number) {
-  return await select({
+  const result = await select({
     message: chalk.magenta(
       i === 0
         ? ">> Ready to check some boxes?"
@@ -26,6 +26,12 @@ export async function mainMenu(i: number) {
       { value: "exit", label: chalk.redBright("Exit") },
     ],
   });
+
+  if (isCancel(result)) {
+    process.exit(0);
+  }
+
+  return result;
 }
 
 export async function listMenu() {
@@ -38,6 +44,10 @@ export async function listMenu() {
         { value: "backToMainMenu", label: chalk.gray("<- Main Menu") },
       ],
     });
+
+    if (isCancel(filterType)) {
+      return true;
+    }
 
     if (filterType === "backToMainMenu") return true; // exit
 
@@ -52,6 +62,10 @@ export async function listMenu() {
         true,
       );
 
+      if (isCancel(selectedTaskOpt)) {
+        continue;
+      }
+
       if (selectedTaskOpt === "__back") continue;
       if (selectedTaskOpt === "backToMainMenu") return true;
 
@@ -60,8 +74,8 @@ export async function listMenu() {
 
     if (filterType === "filters") {
       const filter = await group({
-        status: () =>
-          select({
+        status: async () => {
+          const result = await select({
             message: "Status? " + chalk.gray("(Optional)"),
             options: [
               {
@@ -81,15 +95,32 @@ export async function listMenu() {
                 label: chalk.gray("Skip"),
               },
             ],
-          }),
+          });
 
-        category: () =>
-          categoryMenu("Which category? " + chalk.gray("(Optional)"), [
-            {
-              value: "_",
-              label: chalk.gray("Skip"),
-            },
-          ]),
+          if (isCancel(result)) {
+            return "_";
+          }
+
+          return result;
+        },
+
+        category: async () => {
+          const result = await categoryMenu(
+            "Which category? " + chalk.gray("(Optional)"),
+            [
+              {
+                value: "_",
+                label: chalk.gray("Skip"),
+              },
+            ],
+          );
+
+          if (isCancel(result)) {
+            return "_";
+          }
+
+          return result;
+        },
 
         date: async () => {
           const type = await select({
@@ -114,6 +145,10 @@ export async function listMenu() {
             ],
           });
 
+          if (isCancel(type)) {
+            return "_";
+          }
+
           if (typeof type !== "symbol") return dateFilterHandler(type);
           return null;
         },
@@ -137,6 +172,9 @@ export async function listMenu() {
       if (tasks.length === 0) log.info(chalk.red("No tasks found!"));
       else {
         const selectedTask = await listTasks(message, tasks, true);
+        if (isCancel(selectedTask)) {
+          break;
+        }
         if (selectedTask === "backToMainMenu") break;
         selectedTaskId = parseInt(selectedTask as string);
       }
@@ -169,10 +207,16 @@ export async function categoryMenu(
       label: "You don't have any categories yet!",
     });
 
-  return await select({
+  const result = await select({
     message,
     options: catOptionsArr.concat(additionalOptions || []),
   });
+
+  if (isCancel(result)) {
+    return "_";
+  }
+
+  return result;
 }
 
 export async function listTasks(
@@ -259,26 +303,36 @@ export async function listTasks(
     },
   ]);
 
-  return await select({
+  const result = await select({
     message,
     options,
   });
+
+  if (isCancel(result)) {
+    return "_";
+  }
+
+  return result;
 }
 
 export async function dayInput() {
-  return (
-    (await text({
-      message:
-        "Day date? " +
-        chalk.gray(
-          "(Optional)\n   format: YYYY-MM-DD\n   you can use keywords: 'today', 'tomorrow', 'yesterday'",
-        ),
-    })) as string
-  ).trim();
+  const result = await text({
+    message:
+      "Day date? " +
+      chalk.gray(
+        "(Optional)\n   format: YYYY-MM-DD\n   you can use keywords: 'today', 'tomorrow', 'yesterday'",
+      ),
+  });
+
+  if (isCancel(result)) {
+    return "";
+  }
+
+  return result.trim();
 }
 
 export async function dateRangeInput() {
-  return await group({
+  const result = await group({
     startDate: () =>
       text({
         message:
@@ -292,28 +346,49 @@ export async function dateRangeInput() {
         message:
           "End Date? " +
           chalk.gray(
-            "(Optional)\n   format: YYYY-MM-DD\n   you can use keywords: 'today', 'tomorrow', 'yesterday'",
+            "(Optional)\n   format: YYYY-MM-DD\n   you can use keywords: 'today', 'tomorrow', 'Yesterday'",
           ),
       }),
   });
+
+  if (isCancel(result)) {
+    return { startDate: "", endDate: "" };
+  }
+
+  return result;
 }
 
 export async function newTaskView() {
   const task = await group({
-    title: () =>
-      text({
+    title: async () => {
+      const result = await text({
         message: chalk.magenta("What's the new task?"),
         validate(value) {
           if (!value?.length) return "It can't be empty!";
         },
-      }),
+      });
 
-    description: () =>
-      text({
+      if (isCancel(result)) {
+        log.warn("Task creation will be cancelled");
+        return "";
+      }
+
+      return result;
+    },
+
+    description: async () => {
+      const result = await text({
         message: chalk.magenta("More details? ") + chalk.gray("(Optional)"),
-      }),
+      });
 
-    selectedCategory: () =>
+      if (isCancel(result)) {
+        return "";
+      }
+
+      return result;
+    },
+
+    selectedCategory: async () =>
       categoryMenu(
         chalk.magenta("Tag it! Which category? ") + chalk.gray("(Optional)"),
         [
@@ -324,10 +399,17 @@ export async function newTaskView() {
   });
 
   let category = task.selectedCategory;
-  if (task.selectedCategory === "__new-category")
-    category = (await text({
+  if (task.selectedCategory === "__new-category") {
+    const result = await text({
       message: chalk.magenta("Where should we file this?"),
-    })) as string;
+    });
+
+    if (isCancel(result)) {
+      category = "";
+    } else {
+      category = result as string;
+    }
+  }
 
   return {
     title: task.title,

@@ -17,7 +17,6 @@ console.log(
 console.log(chalk.greenBright("  [✓]") + " Get things done.");
 console.log(chalk.greenBright("  [✓]") + " Stop procrastinating.");
 
-// TODO: handle isCancel
 // TODO: task list functionalities
 // TODO: make task creation possible inside list view
 
