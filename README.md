@@ -2,6 +2,8 @@
 
 An interactive CLI todo manager built with Node.js, TypeScript, and @clack/prompts.
 
+and a solution for [Task Tracker](https://roadmap.sh/projects/task-tracker) challenge on [roadmap.sh](https://roadmap.sh)
+
 ![preview](./assets/preview.JPG)
 
 ## Prerequisites
