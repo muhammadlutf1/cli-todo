@@ -1,10 +1,9 @@
-import fs from "node:fs";
-import { fileURLToPath } from "node:url";
+import * as fs from "node:fs";
 import path from "node:path";
 import type { Storage, Task, TaskStatus, TaskUpdate } from "./types.ts";
 
 const storageFileName = "tasks.json" as const;
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 const storagePath = path.join(__dirname, "..", storageFileName);
 
 function writeToStorage(data: Storage) {
@@ -16,16 +15,22 @@ function writeToStorage(data: Storage) {
   }
 }
 
-function readStorage(): Storage {
+export function readStorage(): Storage {
   const filesList = fs.readdirSync(path.join(__dirname, ".."));
 
   try {
     if (!filesList.includes(storageFileName)) throw new Error();
     const fileContent = fs.readFileSync(storagePath, { encoding: "utf-8" });
     const content = JSON.parse(fileContent);
-    if (!content.tasks) throw new Error();
+    if (!content.tasks) throw new Error(); // file is empty
+    if (!content.next)
+      // if 'next' is missing for some reason
+      (content.tasks as Task[]).reduce(
+        (max, task) => Math.max(max, task.id),
+        0,
+      ) + 1;
 
-    return content; 
+    return content;
   } catch (error) {
     const init = { next: 1, tasks: [] };
     fs.writeFileSync(storagePath, JSON.stringify(init));
