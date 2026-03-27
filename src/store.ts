@@ -26,7 +26,7 @@ export function readStorage(): Storage {
     const fileContent = fs.readFileSync(storagePath, { encoding: "utf-8" });
     const content: Partial<Storage> = JSON.parse(fileContent);
     if (!content.tasks) throw new Error(); // file is empty
-    if (!content.next)
+    if (!content.next) {
       // if 'next' is missing for some reason
       content.next =
         (content.tasks as Task[]).reduce(
@@ -34,7 +34,8 @@ export function readStorage(): Storage {
           0,
         ) + 1;
 
-    fs.writeFileSync(storagePath, JSON.stringify(content));
+      fs.writeFileSync(storagePath, JSON.stringify(content));
+    }
     return content as Storage;
   } catch (error) {
     const init = { next: 1, tasks: [] };
