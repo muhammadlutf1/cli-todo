@@ -21,16 +21,18 @@ export function readStorage(): Storage {
   try {
     if (!filesList.includes(storageFileName)) throw new Error();
     const fileContent = fs.readFileSync(storagePath, { encoding: "utf-8" });
-    const content = JSON.parse(fileContent);
+    const content: Partial<Storage> = JSON.parse(fileContent);
     if (!content.tasks) throw new Error(); // file is empty
     if (!content.next)
       // if 'next' is missing for some reason
-      (content.tasks as Task[]).reduce(
-        (max, task) => Math.max(max, task.id),
-        0,
-      ) + 1;
+      content.next =
+        (content.tasks as Task[]).reduce(
+          (max, task) => Math.max(max, task.id),
+          0,
+        ) + 1;
 
-    return content;
+    fs.writeFileSync(storagePath, JSON.stringify(content));
+    return content as Storage;
   } catch (error) {
     const init = { next: 1, tasks: [] };
     fs.writeFileSync(storagePath, JSON.stringify(init));
