@@ -6,7 +6,7 @@ const storageFileName = "tasks.json" as const;
 const __dirname = import.meta.dirname;
 const storagePath = path.join(__dirname, "..", storageFileName);
 
-function writeToStorage(data: Storage) {
+export function writeToStorage(data: Storage) {
   try {
     fs.writeFileSync(storagePath, JSON.stringify(data));
     return data.tasks.length;
