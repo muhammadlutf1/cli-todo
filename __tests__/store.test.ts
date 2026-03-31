@@ -1,4 +1,5 @@
 import { describe, it, expect, jest } from "@jest/globals";
+import type { TaskStatus } from "../src/types";
 
 const mockedFS = {
   readdirSync: jest.fn(),
@@ -7,7 +8,31 @@ const mockedFS = {
 };
 
 jest.unstable_mockModule("node:fs", () => mockedFS);
-const { readStorage } = await import("../src/store");
+const { readStorage, writeToStorage } = await import("../src/store");
+
+describe("writeToStorage", () => {
+  it("writes given data to storage file and returns tasks length", () => {
+    const data = {
+      next: 2,
+      tasks: [
+        {
+          id: 1,
+          title: "add unit tests",
+          description: "https://github.com/muhammadlutf1/cli-todo",
+          category: "dev",
+          status: "todo" as TaskStatus,
+          createdAtTimestamp: 1774949297914,
+        },
+      ],
+    };
+
+    expect(writeToStorage(data)).toBe(1);
+
+    expect(mockedFS.writeFileSync.mock.calls[0][1]).toEqual(
+      JSON.stringify(data),
+    );
+  });
+});
 
 describe("readStorage", () => {
   const init = { next: 1, tasks: [] };

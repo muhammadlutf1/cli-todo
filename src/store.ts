@@ -9,7 +9,7 @@ const storagePath = path.join(__dirname, "..", storageFileName);
 let tasksMap: Map<Task["id"], Task> | null = null;
 let nextId: number | null = null;
 
-function writeToStorage(data: Storage) {
+export function writeToStorage(data: Storage) {
   try {
     fs.writeFileSync(storagePath, JSON.stringify(data));
     return data.tasks.length;
