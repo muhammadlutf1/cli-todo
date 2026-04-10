@@ -255,7 +255,7 @@ export async function categoryMenu(
   });
 
   if (isCancel(result)) {
-    return "_";
+    return undefined;
   }
 
   return result;
@@ -578,7 +578,7 @@ export async function taskView(
         else return { type: "category", value: result };
       }
 
-      return { type: "category", value: categoryChoice };
+      return typeof categoryChoice === "undefined" ? categoryChoice : { type: "category", value: categoryChoice };
     }
   }
 
