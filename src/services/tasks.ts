@@ -104,7 +104,6 @@ export async function listTasksHandler() {
     if (!task) return logError("Task not found");
 
     const taskAction = await taskView(task);
-    console.log(taskAction);
     if (!taskAction) continue; // TaskView '<- Back' or Canaled
 
     if (taskAction.type === "delete") {
