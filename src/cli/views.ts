@@ -50,7 +50,7 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
           message: "How do you want to see your tasks?",
           options: [
             { value: "today", label: "📅 View Today" },
-            { value: "all", label: "📄 View All" }, // TODO: Add Today View without filter
+            { value: "all", label: "📄 View All" },
             { value: "filters", label: "🛠  Filters" },
             { value: "backToMainMenu", label: chalk.gray("<- Main Menu") },
           ],
@@ -205,7 +205,7 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
       const tasks = filterTasks(getAllTasks(), {
         category: "_",
         status: "_",
-        date: 0,
+        date: Date.now(),
       });
 
       if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
