@@ -236,7 +236,7 @@ export async function categoryMenu(
 
   for (let category in categoriesList) {
     catOptionsArr.push({
-      value: category.toLocaleLowerCase(),
+      value: category,
       label: category,
       hint: `${categoriesList[category].toString()} tasks`,
     });
