@@ -41,10 +41,8 @@ export function filterTasks(tasks: Task[], filter: TaskFilters) {
   return tasks;
 }
 
-export async function dateFilterHandler(dateInput: string) {
+export async function dateFilterHandler(dateInput: "day" | "range" | "_") {
   if (dateInput === "_") return "_";
-
-  if (dateInput === "today") return Date.now();
 
   if (dateInput === "day") {
     const day = await dayInput();
@@ -86,32 +84,34 @@ export async function listTasksHandler() {
   let firstAccess = true;
   let filters: TaskFilters | undefined;
   while (true) {
-    const listSelection = firstAccess ? await listMenu() : await listMenu(false, filters);
+    const listSelection = firstAccess
+      ? await listMenu()
+      : await listMenu(false, filters);
     firstAccess = false;
 
     if (typeof listSelection !== "object") return;
 
     const { selected, filters: f } = listSelection;
-    filters = f
+    filters = f;
 
     if (selected === "add") {
       await addTaskHandler();
       continue;
-    };
+    }
 
     const taskId = parseInt(selected);
     const task = getTask(taskId);
     if (!task) return logError("Task not found");
 
     const taskAction = await taskView(task);
-    console.log(taskAction)
+    console.log(taskAction);
     if (!taskAction) continue; // TaskView '<- Back' or Canaled
 
     if (taskAction.type === "delete") {
       deleteTask(task.id);
       logSuccess("Deleted Task");
       continue;
-    };
+    }
 
     updateTask(task.id, { ...task, [taskAction.type]: taskAction.value });
     logSuccess(`Updated ${taskAction.type} to '${taskAction.value}'`);

@@ -145,10 +145,6 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
               message: "Date? " + chalk.gray("(Optional)"),
               options: [
                 {
-                  value: "today",
-                  label: "⚡ Today",
-                },
-                {
                   value: "day",
                   label: "📅 Specific date",
                 },
@@ -578,7 +574,9 @@ export async function taskView(
         else return { type: "category", value: result };
       }
 
-      return typeof categoryChoice === "undefined" ? categoryChoice : { type: "category", value: categoryChoice };
+      return typeof categoryChoice === "undefined"
+        ? categoryChoice
+        : { type: "category", value: categoryChoice };
     }
   }
 
