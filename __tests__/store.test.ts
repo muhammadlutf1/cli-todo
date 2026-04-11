@@ -8,7 +8,8 @@ const mockedFS = {
 };
 
 jest.unstable_mockModule("node:fs", () => mockedFS);
-const { readStorage, writeToStorage } = await import("../src/store");
+const { readStorage, writeToStorage, createTask } =
+  await import("../src/store");
 
 describe("writeToStorage", () => {
   it("writes given data to storage file and returns tasks length", () => {
@@ -81,5 +82,35 @@ describe("readStorage", () => {
       expect(readStorage()).toEqual(init);
       expect(mockedFS.writeFileSync).toHaveBeenCalled();
     });
+  });
+});
+
+describe("createTask", () => {
+  it("pushes new task to storage and increments next key", () => {
+    mockedFS.readdirSync.mockReturnValue(["tasks.json"]);
+    mockedFS.readFileSync.mockReturnValue(`{"next": 1, "tasks": []}`);
+
+    const returnedId = createTask(
+      "add unit tests",
+      "https://github.com/muhammadlutf1/cli-todo",
+      "dev",
+    );
+
+    expect(returnedId).toEqual(1);
+    const result = JSON.parse(
+      mockedFS.writeFileSync.mock.calls[0][1] as string,
+    );
+
+    expect(result["next"]).toBe(2);
+    expect(result["tasks"][0]["id"]).toBe(1);
+    expect(result["tasks"][0]["title"]).toBe("add unit tests");
+    expect(result["tasks"][0]["description"]).toBe(
+      "https://github.com/muhammadlutf1/cli-todo",
+    );
+    expect(result["tasks"][0]["category"]).toBe("dev");
+    expect(result["tasks"][0]["status"]).toBe("todo");
+    expect(result["tasks"][0]["createdAtTimestamp"]).toEqual(
+      expect.any(Number),
+    );
   });
 });
