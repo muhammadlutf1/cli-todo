@@ -39,7 +39,7 @@ function readStorage(): Storage {
 // ---  API ---
 
 export function getAllTasks(): Task[] {
-  return [...getTasksMap().values()]; // TODO: Sort by createdAt
+  return [...getTasksMap().values()].sort((a, b) => b.id - a.id);
 }
 
 export function getTask(id: number) {
