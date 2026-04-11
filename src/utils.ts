@@ -7,17 +7,14 @@ export const Dates = {
 } as const;
 
 export function sortTasksByStatus(tasks: Task[]) {
-  const doneTasks: Task[] = [];
-  const inProgressTasks: Task[] = [];
-  const todoTasks: Task[] = [];
+  const priority = { todo: 0, "in-progress": 1, done: 2 } as const;
 
-  tasks.forEach((task) => {
-    if (task.status === "done") doneTasks.push(task);
-    if (task.status === "in-progress") inProgressTasks.push(task);
-    if (task.status === "todo") todoTasks.push(task);
-  });
+  return tasks.sort((a, b) => priority[a.status] - priority[b.status]);
+}
 
-  return doneTasks.concat(inProgressTasks, todoTasks);
+export function sortTasksByNewest(tasks: Task[]) {
+  // currently using creation date
+  return tasks.sort((a, b) => b.createdAtTimestamp - a.createdAtTimestamp);
 }
 
 /**

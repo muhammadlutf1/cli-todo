@@ -15,6 +15,7 @@ import stringWidth from "string-width";
 import { getAllTasks, getCategories } from "../store.ts";
 import { filterTasks, dateFilterHandler } from "../services/tasks.ts";
 import Duration from "duration-relativetimeformat";
+import { sortTasksByNewest, sortTasksByStatus } from "../utils.ts";
 const d = new Duration("en");
 
 const addNewTaskLabel = chalk.green("➕ Add a new task");
@@ -262,6 +263,8 @@ export async function listTasks(
   tasks: Task[],
   showCategory?: boolean,
 ) {
+  tasks = sortTasksByStatus(sortTasksByNewest(tasks));
+
   const digits = tasks.length > 100 ? 3 : tasks.length > 10 ? 2 : 1;
 
   const lengths: number[] = [];

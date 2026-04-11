@@ -39,7 +39,6 @@ cli-todo # run it
 
 ## Todo list
 
-- [ ] Sorting
 - [ ] Focus Timer
 
 **Contributions are welcome :)**

@@ -39,7 +39,7 @@ function readStorage(): Storage {
 // ---  API ---
 
 export function getAllTasks(): Task[] {
-  return [...getTasksMap().values()].sort((a, b) => b.id - a.id);
+  return [...getTasksMap().values()];
 }
 
 export function getTask(id: number) {
