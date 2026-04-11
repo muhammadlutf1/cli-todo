@@ -7,6 +7,9 @@ const storageFileName = "tasks.json" as const;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const storagePath = path.join(__dirname, "..", storageFileName);
 
+let tasksMap: Map<Task["id"], Task> | null = null;
+let nextId: number | null = null;
+
 function writeToStorage(data: Storage) {
   try {
     fs.writeFileSync(storagePath, JSON.stringify(data));
@@ -25,7 +28,7 @@ function readStorage(): Storage {
     const content = JSON.parse(fileContent);
     if (!content.tasks) throw new Error();
 
-    return content; 
+    return content;
   } catch (error) {
     const init = { next: 1, tasks: [] };
     fs.writeFileSync(storagePath, JSON.stringify(init));
@@ -33,16 +36,14 @@ function readStorage(): Storage {
   }
 }
 
-// ---  Utils ---
+// ---  API ---
 
 export function getAllTasks(): Task[] {
-  return readStorage().tasks;
+  return [...getTasksMap().values()]; // TODO: Sort by createdAt
 }
 
 export function getTask(id: number) {
-  const tasks = getAllTasks();
-
-  return tasks.find((task) => task.id === id) ?? null;
+  return getTasksMap().get(id);
 }
 
 export function getTasksByCategory(category: string) {
@@ -62,9 +63,10 @@ export function createTask(
   description?: string,
   category?: string,
 ) {
-  const { next: id, tasks } = readStorage();
+  const id = getNextId();
+  const tasks = getTasksMap();
 
-  tasks.push({
+  tasks.set(id, {
     id,
     title,
     description,
@@ -73,7 +75,9 @@ export function createTask(
     createdAtTimestamp: Date.now(),
   });
 
-  writeToStorage({ next: id + 1, tasks });
+  nextId = id + 1;
+
+  writeToStorage({ next: nextId, tasks: [...tasks.values()] });
   return id;
 }
 
@@ -81,26 +85,30 @@ export function updateTask(id: number, data: TaskUpdate) {
   if (!Object.keys(data).length)
     throw new Error("Expected 1 Update Field At Least");
 
-  const { next, tasks } = readStorage();
+  const next = getNextId();
+  const tasks = getTasksMap();
+
+  const task = getTask(id);
+  if (!task) throw new Error(`Task Not Found (ID: ${id})`);
+  tasks.set(id, { ...task, ...data, updatedAtTimestamp: Date.now() });
 
   writeToStorage({
     next,
-    tasks: tasks.map((task) =>
-      task.id === id
-        ? { ...task, ...data, updatedAtTimestamp: Date.now() }
-        : task,
-    ),
+    tasks: [...tasks.values()],
   });
 
   return id;
 }
 
 export function deleteTask(id: number) {
-  const { next, tasks } = readStorage();
+  const next = getNextId();
+  const tasks = getTasksMap();
+
+  tasks.delete(id);
 
   return writeToStorage({
     next,
-    tasks: tasks.filter((task) => task.id !== id),
+    tasks: [...tasks.values()],
   });
 }
 
@@ -115,4 +123,21 @@ export function getCategories() {
   );
 
   return list;
+}
+
+// --- Utils ---
+
+function getTasksMap(): Map<Task["id"], Task> {
+  if (!tasksMap) {
+    const map = new Map<Task["id"], Task>();
+    const storage = readStorage();
+    storage.tasks.forEach((task) => map.set(task.id, task));
+    tasksMap = map;
+  }
+  return tasksMap;
+}
+
+function getNextId(): number {
+  if (!nextId) nextId = readStorage().next;
+  return nextId;
 }
