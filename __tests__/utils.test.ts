@@ -1,5 +1,10 @@
 import { describe, it, expect } from "@jest/globals";
-import { checkDateRange } from "../src/utils";
+import {
+  checkDateRange,
+  sortTasksByStatus,
+  sortTasksByNewest,
+} from "../src/utils";
+import { Task } from "../src/types";
 
 describe("checkDateRange utility", () => {
   describe("when only taskDate is given and everything else is nullish", () => {
@@ -179,5 +184,53 @@ describe("checkDateRange utility", () => {
 
       expect(result).toBe(false);
     });
+  });
+});
+
+describe("sortTasksByStatus utility", () => {
+  it("sorts tasks by status", () => {
+    const tasks = [
+      { status: "done" },
+      { status: "in-progress" },
+      { status: "todo" },
+      { status: "in-progress" },
+      { status: "done" },
+      { status: "todo" },
+    ];
+
+    const result = sortTasksByStatus(tasks as Task[]);
+
+    expect(result).toEqual([
+      { status: "todo" },
+      { status: "todo" },
+      { status: "in-progress" },
+      { status: "in-progress" },
+      { status: "done" },
+      { status: "done" },
+    ]);
+  });
+});
+
+describe("sortTasksByNewest utility", () => {
+  it("sorts tasks by creation date", () => {
+    const tasks = [
+      { createdAtTimestamp: 2 },
+      { createdAtTimestamp: 1 },
+      { createdAtTimestamp: 4 },
+      { createdAtTimestamp: 5 },
+      { createdAtTimestamp: 6 },
+      { createdAtTimestamp: 3 },
+    ];
+
+    const result = sortTasksByNewest(tasks as Task[]);
+
+    expect(result).toEqual([
+      { createdAtTimestamp: 6 },
+      { createdAtTimestamp: 5 },
+      { createdAtTimestamp: 4 },
+      { createdAtTimestamp: 3 },
+      { createdAtTimestamp: 2 },
+      { createdAtTimestamp: 1 },
+    ]);
   });
 });
