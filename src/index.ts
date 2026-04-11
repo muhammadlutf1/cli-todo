@@ -2,8 +2,8 @@
 
 import chalk from "chalk";
 import terminalLink from "terminal-link";
-import { mainMenu } from "./cli/views.ts";
-import { addTaskHandler, listTasksHandler } from "./services/tasks.ts";
+import { mainMenu } from "./cli/views";
+import { addTaskHandler, listTasksHandler } from "./services/tasks";
 
 const logo = ` ____  _     _    _____ ____  ____  ____ 
 /   _\\/ \\   / \\  /__ __Y  _ \\/  _ \\/  _ \\
@@ -18,8 +18,6 @@ console.log(
 );
 console.log(chalk.greenBright("  [✓]") + " Get things done.");
 console.log(chalk.greenBright("  [✓]") + " Stop procrastinating.");
-
-
 
 let firstAccess = true;
 async function main() {
