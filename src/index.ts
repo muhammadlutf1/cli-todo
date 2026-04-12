@@ -2,8 +2,8 @@
 
 import chalk from "chalk";
 import terminalLink from "terminal-link";
-import { mainMenu } from "./cli/views";
-import { addTaskHandler, listTasksHandler } from "./services/tasks";
+import { mainMenu } from "./cli/views.ts";
+import { addTaskHandler, listTasksHandler } from "./services/tasks.ts";
 
 const logo = ` ____  _     _    _____ ____  ____  ____ 
 /   _\\/ \\   / \\  /__ __Y  _ \\/  _ \\/  _ \\

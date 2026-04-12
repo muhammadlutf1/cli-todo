@@ -10,12 +10,12 @@ import {
 } from "@clack/prompts";
 import type { Option } from "@clack/prompts";
 type SelectOption = Option<string> & { label: string };
-import type { Task, TaskFilters } from "../types";
+import type { Task, TaskFilters } from "../types.ts";
 import stringWidth from "string-width";
-import { getAllTasks, getCategories } from "../store";
-import { filterTasks, dateFilterHandler } from "../services/tasks";
+import { getAllTasks, getCategories } from "../store.ts";
+import { filterTasks, dateFilterHandler } from "../services/tasks.ts";
 import Duration from "duration-relativetimeformat";
-import { sortTasksByNewest, sortTasksByStatus } from "../utils";
+import { sortTasksByNewest, sortTasksByStatus } from "../utils.ts";
 const d = new Duration("en");
 
 const addNewTaskLabel = chalk.green("➕ Add a new task");

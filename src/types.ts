@@ -1,4 +1,4 @@
-import { Dates } from "./utils";
+import { Dates } from "./utils.ts";
 
 export type TaskStatus = "done" | "in-progress" | "todo";
 
