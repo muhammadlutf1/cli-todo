@@ -149,3 +149,9 @@ function getNextId(): number {
   if (!nextId) nextId = readStorage().next;
   return nextId;
 }
+
+// for testing purposes
+export function _clearCache() {
+  tasksMap = null;
+  nextId = null;
+}
