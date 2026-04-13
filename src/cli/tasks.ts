@@ -5,6 +5,7 @@ import stringWidth from "string-width";
 import { sortTasksByNewest, sortTasksByStatus } from "../utils.ts";
 import { categoryMenu } from "./menus.ts";
 import type { Task } from "../types.ts";
+import { clearConsole } from "./logs.ts";
 
 const d = new Duration("en");
 
@@ -118,6 +119,8 @@ export async function taskView(
   | { type: "delete" }
   | undefined
 > {
+  clearConsole();
+
   const action = await select({
     message:
       `"${chalk.bold.magenta(`${task.title}`)}"` +

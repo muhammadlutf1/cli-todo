@@ -6,9 +6,12 @@ import { listTasks } from "./tasks.ts";
 
 import type { Option } from "@clack/prompts";
 import type { TaskFilters } from "../types.ts";
+import { clearConsole } from "./logs.ts";
 type SelectOption = Option<string> & { label: string };
 
 export async function mainMenu(firstAccess: boolean) {
+  clearConsole();
+
   const result = await select({
     message: chalk.magenta(
       firstAccess
@@ -35,6 +38,8 @@ export async function mainMenu(firstAccess: boolean) {
 
 export async function listMenu(prompt = true, filters?: TaskFilters) {
   while (true) {
+    clearConsole();
+
     const filterType = prompt
       ? await select({
           message: "How do you want to see your tasks?",

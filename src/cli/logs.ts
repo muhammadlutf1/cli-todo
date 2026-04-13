@@ -18,6 +18,11 @@ export function printHeader() {
   console.log(chalk.greenBright("  [✓]") + " Stop procrastinating.");
 }
 
+export function clearConsole() {
+  console.clear();
+  printHeader();
+}
+
 export function logSuccess(message: string) {
   log.success(chalk.green(message));
 }
