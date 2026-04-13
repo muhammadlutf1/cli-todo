@@ -1,15 +1,10 @@
-import type { TaskFilters, Task, DateKey } from "../types.ts";
-import { checkDateRange, Dates } from "../utils.ts";
-import {
-  dateRangeInput,
-  dayInput,
-  listMenu,
-  logError,
-  logSuccess,
-  newTaskView,
-  taskView,
-} from "../cli/views.ts";
 import { createTask, deleteTask, getTask, updateTask } from "../store.ts";
+import { listMenu } from "../cli/menus.ts";
+import { newTaskView, taskView } from "../cli/tasks.ts";
+import { checkDateRange, Dates } from "../utils.ts";
+import { dateRangeInput, dayInput } from "../cli/dates.ts";
+import { logError, logSuccess } from "../cli/logs.ts";
+import type { TaskFilters, Task, DateKey } from "../types.ts";
 
 export async function addTaskHandler() {
   const task = await newTaskView();
