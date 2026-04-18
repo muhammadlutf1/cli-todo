@@ -6,6 +6,7 @@ import { addTaskHandler, listTasksHandler } from "./services/tasks.ts";
 let firstAccess = true;
 
 printHeader();
+process.stdout.write("\x1b[s");
 
 async function main() {
   while (true) {

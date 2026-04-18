@@ -19,8 +19,7 @@ export function printHeader() {
 }
 
 export function clearConsole() {
-  console.clear();
-  printHeader();
+  process.stdout.write("\x1b[u\x1b[J");
 }
 
 export function logSuccess(message: string) {
