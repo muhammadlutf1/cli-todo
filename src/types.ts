@@ -27,3 +27,5 @@ export type TaskFilters = {
   //    ^^^^      ^^^^^^^^^         ^^^
   // type: none       range         day
 };
+
+export type TaskMenuType = "all" | "today" | "filters";

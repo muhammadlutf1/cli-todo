@@ -5,7 +5,7 @@ import { filterTasks, dateFilterHandler } from "../services/tasks.ts";
 import { listTasks } from "./tasks.ts";
 
 import type { Option } from "@clack/prompts";
-import type { TaskFilters } from "../types.ts";
+import type { TaskFilters, TaskMenuType } from "../types.ts";
 import { clearConsole } from "./logs.ts";
 type SelectOption = Option<string> & { label: string };
 
@@ -36,11 +36,20 @@ export async function mainMenu(firstAccess: boolean) {
   return result;
 }
 
-export async function listMenu(prompt = true, filters?: TaskFilters) {
+export async function listMenu(
+  taskMenu?: "all" | "today" | "filters" | undefined,
+  filters?: TaskFilters,
+): Promise<
+  | undefined
+  | {
+      taskMenu?: TaskMenuType;
+      selected?: string;
+      filters?: TaskFilters;
+      noTasks?: boolean;
+    }
+> {
   while (true) {
-    clearConsole();
-
-    const filterType = prompt
+    const filterType = !taskMenu
       ? await select({
           message: "How do you want to see your tasks?",
           options: [
@@ -50,18 +59,20 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
             { value: "backToMainMenu", label: chalk.gray("<- Main Menu") },
           ],
         })
-      : filters
-        ? "filters"
-        : "all";
+      : taskMenu;
 
-    if (isCancel(filterType)) return true;
+    if (isCancel(filterType) || filterType === "backToMainMenu") break;
 
-    if (filterType === "backToMainMenu") return true; // exit
+    clearConsole();
 
     if (filterType === "all") {
       const tasks = getAllTasks();
 
-      if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
+      if (tasks.length === 0)
+        return {
+          taskMenu: "all",
+          noTasks: true,
+        };
 
       const selectedTaskOpt = await listTasks(
         chalk.magenta.underline("All tasks:") +
@@ -70,17 +81,14 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
         true,
       );
 
-      if (isCancel(selectedTaskOpt)) {
+      if (isCancel(selectedTaskOpt) || selectedTaskOpt === "__back") {
+        taskMenu = undefined;
         continue;
       }
 
-      if (selectedTaskOpt === "__back") {
-        prompt = true;
-        continue;
-      }
-      if (selectedTaskOpt === "backToMainMenu") return true;
+      if (selectedTaskOpt === "backToMainMenu") break;
 
-      return { selected: selectedTaskOpt };
+      return { selected: selectedTaskOpt, taskMenu: "all" };
     }
 
     if (filterType === "filters") {
@@ -178,16 +186,24 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
           `${taskFilters.status !== "_" ? `status: (${taskFilters.status})` : ""}${taskFilters.category !== "_" ? `category: (${taskFilters.category})` : ""} ${filteredDateString}`,
         );
 
-      if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
+      if (tasks.length === 0)
+        return {
+          taskMenu: "filters",
+          noTasks: true,
+        };
 
-      const selected = await listTasks(message, tasks, true);
-      if (isCancel(selected)) {
-        break;
+      const selectedTaskOpt = await listTasks(message, tasks, true);
+
+      if (isCancel(selectedTaskOpt) || selectedTaskOpt === "__back") {
+        taskMenu = undefined;
+        continue;
       }
-      if (selected === "backToMainMenu") break;
+
+      if (selectedTaskOpt === "backToMainMenu") break;
 
       return {
-        selected,
+        taskMenu: "filters",
+        selected: selectedTaskOpt,
         filters: taskFilters,
       };
     }
@@ -199,19 +215,28 @@ export async function listMenu(prompt = true, filters?: TaskFilters) {
         date: Date.now(),
       });
 
-      if (tasks.length === 0) return log.info(chalk.red("No tasks found!"));
+      if (tasks.length === 0)
+        return {
+          taskMenu: "today",
+          noTasks: true,
+        };
 
-      const selected = await listTasks(
+      const selectedTaskOpt = await listTasks(
         chalk.magenta.underline("Today Tasks:"),
         tasks,
         true,
       );
-      if (isCancel(selected)) break;
 
-      if (selected === "backToMainMenu") break;
+      if (isCancel(selectedTaskOpt) || selectedTaskOpt === "__back") {
+        taskMenu = undefined;
+        continue;
+      }
+
+      if (selectedTaskOpt === "backToMainMenu") break;
 
       return {
-        selected,
+        taskMenu: "today",
+        selected: selectedTaskOpt,
       };
     }
   }

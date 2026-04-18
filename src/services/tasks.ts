@@ -4,7 +4,7 @@ import { newTaskView, taskView } from "../cli/tasks.ts";
 import { checkDateRange, Dates } from "../utils.ts";
 import { dateRangeInput, dayInput } from "../cli/dates.ts";
 import { logError, logSuccess } from "../cli/logs.ts";
-import type { TaskFilters, Task, DateKey } from "../types.ts";
+import type { TaskFilters, Task, DateKey, TaskMenuType } from "../types.ts";
 
 export async function addTaskHandler() {
   const task = await newTaskView();
@@ -76,15 +76,20 @@ export async function dateFilterHandler(dateInput: "day" | "range" | "_") {
 }
 
 export async function listTasksHandler() {
-  let firstAccess = true;
+  let taskMenu: TaskMenuType | undefined;
   let filters: TaskFilters | undefined;
   while (true) {
-    const listSelection = firstAccess
-      ? await listMenu()
-      : await listMenu(false, filters);
-    firstAccess = false;
+    const listSelection = await listMenu(taskMenu, filters);
 
-    if (typeof listSelection !== "object") return;
+    if (!listSelection) return;
+
+    if (listSelection.noTasks) {
+      logError("> No tasks found!");
+      taskMenu = undefined;
+      continue;
+    }
+
+    taskMenu = listSelection.taskMenu;
 
     const { selected, filters: f } = listSelection;
     filters = f;
@@ -94,7 +99,7 @@ export async function listTasksHandler() {
       continue;
     }
 
-    const taskId = parseInt(selected);
+    const taskId = parseInt(selected!); // must exist if passed till this point
     const task = getTask(taskId);
     if (!task) return logError("Task not found");
 
