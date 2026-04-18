@@ -2,7 +2,7 @@
 
 import { mainMenu } from "./cli/menus.ts";
 import { printHeader } from "./cli/logs.ts";
-import { addTaskHandler, listTasksHandler } from "./services/tasks.ts";
+import { addTaskHandler, listTasksHandler } from "./core/tasks.ts";
 let firstAccess = true;
 
 printHeader();

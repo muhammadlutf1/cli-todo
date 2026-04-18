@@ -1,7 +1,7 @@
 import chalk from "chalk";
-import { group, select, log, text, isCancel } from "@clack/prompts";
+import { group, select, isCancel } from "@clack/prompts";
 import { getAllTasks, getCategories } from "../store.ts";
-import { filterTasks, dateFilterHandler } from "../services/tasks.ts";
+import { filterTasks, dateFilterHandler } from "../core/tasks.ts";
 import { listTasks } from "./tasks.ts";
 
 import type { Option } from "@clack/prompts";
