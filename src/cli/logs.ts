@@ -10,7 +10,7 @@ export function printHeader() {
 \\____/\\____/\\_/    \\_/ \\____/\\____/\\____/
 `;
 
-  console.log(chalk.magentaBright(logo));
+  console.log(chalk.magenta(logo));
   console.log(
     `  By ${terminalLink("Muhammad Lutfi", "https://github.com/muhammadlutf1")}`,
   );
